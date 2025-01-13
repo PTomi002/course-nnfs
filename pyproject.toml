@@ -6,12 +6,14 @@ authors = ["Tamas Paulin <tamasdavid.paulin@tesco.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
-numpy = "^2.2.1"
+python = ">=3.10, <=3.12.6"
 matplotlib = "^3.10.0"
 nnfs = "^0.5.1"
+tensorflow = "^2.18.0"
+numpy = "2.0.2"
 
 [build-system]
+package-mode = false
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
