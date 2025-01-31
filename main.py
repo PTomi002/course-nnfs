@@ -1,14 +1,16 @@
+from abc import abstractmethod
+
 import numpy as np
 
 
 class DenseLayer:
-    def __init__(self, n_inputs, n_neurons):
+    def __init__(self, number_of_inputs, number_of_neurons):
         # We’re initializing weights to be (inputs, neurons) instead of transposing every time we perform a forward pass.
         # Multiply by 0.01 to make them smaller.
         self.output = None
-        self.weights = 0.01 * np.random.randn(n_inputs, n_neurons)
+        self.weights = 0.01 * np.random.randn(number_of_inputs, number_of_neurons)
         # The most common initialization for biases is 0.
-        self.biases = np.zeros((1, n_neurons))
+        self.biases = np.zeros((1, number_of_neurons))
 
     def forward(self, inputs):
         # Forward pass: passing the input through the network.
@@ -20,6 +22,7 @@ class ReLuActivation:
         self.output = None
 
     def forward(self, inputs):
+        # Activating only the relevant paths of the neurons.
         self.output = np.maximum(0, inputs)
 
 
@@ -38,3 +41,36 @@ class SoftmaxActivation:
         # Normalized probabilities.
         # Divide the exponential values within each row with the sum of the row.
         self.output = exp_values / np.sum(exp_values, axis=1, keepdims=True)
+
+
+class AbstractLoss:
+    def __init__(self):
+        self.avg_loss = None
+        self.output = None
+
+    # Calculate the average loss of all the samples.
+    def calculate_avg_loss(self, predictions, targets):
+        self.forward(predictions, targets)
+        self.avg_loss = np.mean(self.output)
+
+    @abstractmethod
+    def forward(self, predictions, targets):
+        pass
+
+
+class CategoricalCrossEntropy(AbstractLoss):
+    def __init__(self):
+        super().__init__()
+
+    # Neuron1  2   3                    Targets
+    # | 0.7, 0.1, 0.2   | Input1    | 1.0  0.0  0.0   |
+    # | 0.1, 0.5, 0.4   | Input2    | 0.0, 1.0, 0.0   |
+    # | 0.02, 0.9, 0.08 | Input3    | 0.0, 1.0, 0.0   |
+    def forward(self, predictions, targets):
+        clipped_predictions = np.clip(predictions, 1e-7, 1 - 1e-7)
+        number_of_samples = len(clipped_predictions)
+
+        if len(targets.shape) == 1:
+            self.output = -1 * np.log(clipped_predictions[range(number_of_samples), targets])
+        elif len(targets.shape) == 2:
+            self.output = -1 * np.sum(targets * np.log(clipped_predictions), axis=1)

@@ -2,8 +2,7 @@ import matplotlib.pyplot as plt
 import nnfs
 
 from nnfs.datasets import spiral_data
-from main import DenseLayer, SoftmaxActivation
-from main import ReLuActivation
+from main import DenseLayer, SoftmaxActivation, CategoricalCrossEntropy, ReLuActivation
 
 # Override numpy dot product method to ensure deterministic behaviour dues to random seeds for spiral data.
 nnfs.init()
@@ -22,11 +21,21 @@ if __name__ == '__main__':
     layer_2 = DenseLayer(3, 3)
     layer_2_activation = SoftmaxActivation()
 
+    loss_function = CategoricalCrossEntropy()
+
     layer_1.forward(coordinates)
     layer_1_activation.forward(layer_1.output)
 
     layer_2.forward(layer_1_activation.output)
     layer_2_activation.forward(layer_2.output)
 
+    loss_function.calculate_avg_loss(layer_2_activation.output, classification)
+
     # At this point the neural network is based on random weights so the output is random.
     print("Layer 2 activation output: ", layer_2_activation.output[:5])
+    # Loss is useful to optimize the model.
+    print("Losses: ", loss_function.avg_loss)
+
+
+
+
