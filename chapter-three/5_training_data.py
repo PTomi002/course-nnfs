@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import nnfs
+import numpy as np
 
 from nnfs.datasets import spiral_data
 from main import DenseLayer, SoftmaxActivation, CategoricalCrossEntropy, ReLuActivation
@@ -34,8 +35,7 @@ if __name__ == '__main__':
     # At this point the neural network is based on random weights so the output is random.
     print("Layer 2 activation output: ", layer_2_activation.output[:5])
     # Loss is useful to optimize the model.
-    print("Losses: ", loss_function.avg_loss)
-
-
-
-
+    print("Average loss: ", loss_function.avg_loss)
+    # Accuracy of the model:
+    accuracy = np.mean(np.argmax(layer_2_activation.output, axis=1) == classification)
+    print("Accuracy: ", accuracy)
