@@ -13,7 +13,7 @@ def non_linear_function(x):
 
 if __name__ == '__main__':
     # [Definition] What is the slope (derivative - derivalt) of the function?
-    # Answer: delta y / delta x
+    # Answer: delta y (amennyit felfele megy) / delta x (amennyit elore megy)
     x = np.array(range(5))
     y = linear_function(x)
     print("Linear X: ", x)
