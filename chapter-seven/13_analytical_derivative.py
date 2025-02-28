@@ -7,4 +7,5 @@
 
 if __name__ == '__main__':
     print("Function:    d/dx f(x)  = x^3 + 2x^2 - 5x + 7")
+    print("Different notation (Leibniz):    df(x)/dx = x^3 + 2x^2 - 5x + 7")
     print("Derivative:  f'x(x) = 3x^2 + 4x - 5")

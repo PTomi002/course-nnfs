@@ -7,6 +7,9 @@
 # (1) Multiplication:   f(x,y) = x * y      -> f'x(x,y) = 1 * y // we derivate x, (c*f) -> c*f'
 #                                           -> f'y(x,y) = x * 1 // we derivate y, constants move out of the derivation
 # (2) Max function:     f(x,y) = max(x,y)   -> f'(x,y)  = 1(x > y) // 1 if the condition is met, otherwise 0
+# Imagine it for the different intervals:
+# x > 0 -> d/dx f(x) = x, f'(x) = 1
+# x < 0 -> d/dx f(x) = 0, f'(x) = 0
 
 if __name__ == '__main__':
     print("Function:                    f(x,y) = 3x^3 - y^2 + 5x")
