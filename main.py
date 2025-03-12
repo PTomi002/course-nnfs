@@ -5,25 +5,43 @@ import numpy as np
 
 class DenseLayer:
     def __init__(self, number_of_inputs, number_of_neurons):
+        self.inputs = None
+        self.output = None
+        self.d_weights = None
+        self.d_inputs = None
+        self.d_biases = None
         # We’re initializing weights to be (inputs, neurons) instead of transposing every time we perform a forward pass.
         # Multiply by 0.01 to make them smaller.
-        self.output = None
         self.weights = 0.01 * np.random.randn(number_of_inputs, number_of_neurons)
         # The most common initialization for biases is 0.
         self.biases = np.zeros((1, number_of_neurons))
 
+    # Forward pass: passing the input through the network.
     def forward(self, inputs):
-        # Forward pass: passing the input through the network.
+        # Remember the inputs during backward pass
+        self.inputs = inputs
         self.output = np.dot(inputs, self.weights) + self.biases
+
+    def backward(self, d_values):
+        self.d_inputs = np.dot(d_values, self.weights)
+        self.d_weights = np.dot(self.inputs.T, d_values)
+        self.d_biases = np.sum(d_values, axis=0, keepdims=True)
 
 
 class ReLuActivation:
     def __init__(self):
+        self.inputs = None
         self.output = None
+        self.d_inputs = None
 
     def forward(self, inputs):
+        self.inputs = inputs
         # Activating only the relevant paths of the neurons.
         self.output = np.maximum(0, inputs)
+
+    def backward(self, d_values):
+        self.d_inputs = d_values.copy()
+        self.d_inputs[self.inputs <= 0] = 0
 
 
 class SoftmaxActivation:
