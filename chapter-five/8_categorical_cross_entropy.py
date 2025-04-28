@@ -29,6 +29,7 @@ def batch_categorical_cross_entropy(outputs, targets):
         return -1 * np.log(outputs[range(len(outputs)), targets])
     elif len(targets.shape) == 2:
         return -1 * np.sum(targets * np.log(outputs), axis=1)
+    return None
 
 
 # Natural Logarithm: a^x = b -> log a(b) = x | e^x = 5.2 -> ln(5.2) = x

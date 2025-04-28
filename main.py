@@ -79,6 +79,7 @@ class AbstractLoss:
 class CategoricalCrossEntropy(AbstractLoss):
     def __init__(self):
         super().__init__()
+        self.d_inputs = None
 
     # Neuron1  2   3                    Targets
     # | 0.7, 0.1, 0.2   | Input1    | 1.0  0.0  0.0   |
@@ -92,3 +93,17 @@ class CategoricalCrossEntropy(AbstractLoss):
             self.output = -1 * np.log(clipped_predictions[range(number_of_samples), targets])
         elif len(targets.shape) == 2:
             self.output = -1 * np.sum(targets * np.log(clipped_predictions), axis=1)
+
+    def backward(self, d_values, y_true):
+        number_of_features = len(d_values[0])
+        # e.g.: arr = np.array([1, 2, 3, 4])   -> shape = (4,),   length is 1
+        # e.g.: arr = np.array([[1, 2, 3, 4]]) -> shape = (2, 4), length is 2
+        if len(y_true.shape) == 1:
+            y_true = np.eye(number_of_features)[y_true]
+
+        self.d_inputs = -y_true / d_values
+
+        size_of_batch = len(d_values)
+        #  The optimizer will perform a sum operation so a sum divided by their count will bt the mean.
+        # We dont want to adjust the learning rate based on the size of the samples, so we normalize it.
+        self.d_inputs = self.d_inputs / size_of_batch
