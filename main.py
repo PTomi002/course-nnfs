@@ -47,6 +47,7 @@ class ReLuActivation:
 class SoftmaxActivation:
     def __init__(self):
         self.d_inputs = None
+        self.inputs = None
         self.output = None
 
     # Input looks like:
@@ -55,6 +56,7 @@ class SoftmaxActivation:
     # | ..............       | .....
     # | v300,1 v300,2 v300,3 | Input300
     def forward(self, inputs):
+        self.inputs = inputs
         # Unnormalized probabilities.
         exp_values = np.exp(inputs - np.max(inputs, axis=1, keepdims=True))
         # Normalized probabilities.
@@ -106,8 +108,8 @@ class CategoricalCrossEntropy(AbstractLoss):
     # | 0.1, 0.5, 0.4   | Input2    | 0.0, 1.0, 0.0   |
     # | 0.02, 0.9, 0.08 | Input3    | 0.0, 1.0, 0.0   |
     def forward(self, predictions, targets):
+        number_of_samples = len(predictions)
         clipped_predictions = np.clip(predictions, 1e-7, 1 - 1e-7)
-        number_of_samples = len(clipped_predictions)
 
         if len(targets.shape) == 1:
             self.output = -1 * np.log(clipped_predictions[range(number_of_samples), targets])
@@ -154,3 +156,12 @@ class CompositeSoftmaxAndLoss:
         #  The optimizer will perform a sum operation so a sum divided by their count will bt the mean.
         # We dont want to adjust the learning rate based on the size of the samples, so we normalize it.
         self.d_inputs = self.d_inputs / size_of_batch
+
+
+class StochasticGradientDecrease:
+    def __init__(self, learning_rate=1.0):
+        self.learning_rate = learning_rate
+
+    def update_params(self, layer):
+        layer.weights += -self.learning_rate * layer.d_weights
+        layer.biases += -self.learning_rate * layer.d_biases

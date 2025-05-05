@@ -3,7 +3,8 @@ import nnfs
 import numpy as np
 
 from nnfs.datasets import spiral_data
-from main import DenseLayer, SoftmaxActivation, CategoricalCrossEntropy, ReLuActivation, CompositeSoftmaxAndLoss
+from main import DenseLayer, SoftmaxActivation, CategoricalCrossEntropy, ReLuActivation, CompositeSoftmaxAndLoss, \
+    StochasticGradientDecrease
 
 # Override numpy dot product method to ensure deterministic behaviour dues to random seeds for spiral data.
 nnfs.init()
@@ -61,6 +62,8 @@ if __name__ == '__main__':
     l_2 = DenseLayer(3, 3)
     l_2_composite = CompositeSoftmaxAndLoss()
 
+    optimizer = StochasticGradientDecrease()
+
     # Forward Pass
     l_1.forward(coordinates)
     l_1_activation.forward(l_1.output)
@@ -86,4 +89,9 @@ if __name__ == '__main__':
     print("Layer Two Weights:", l_2.d_weights)
     print("Layer Two Biases:", l_2.d_biases)
 
-    first_version_code()
+    # first_version_code()
+
+    # Run optimizer
+    optimizer.update_params(l_1)
+    optimizer.update_params(l_2)
+
