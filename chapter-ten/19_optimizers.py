@@ -1,7 +1,7 @@
 import numpy as np
 
 from nnfs.datasets import spiral_data
-from main import DenseLayer, ReLuActivation, CompositeSoftmaxAndLoss, StochasticGradientDecrease
+from main import DenseLayer, ReLuActivation, CompositeSoftmaxAndLoss, StochasticGradientDecrease, AdGrad
 
 # [Definition] What is the optimizer?
 # Answer: The optimizer adjust the weights and the biases to decrease the measure of the loss.
@@ -61,18 +61,22 @@ if __name__ == '__main__':
     layer_2 = DenseLayer(64, 3)
     composite_activation = CompositeSoftmaxAndLoss()
 
-    # === Version 2 ===
+    # === SGD ===
     # 1e-2 = 0.01 -> Learning rate quickly became too small over the steps, model stuck in a local minimum.
     # optimizer = StochasticGradientDecrease(decay=1e-2)
     # 1e-3 = 0.001 -> Learning rate moderately became small over the steps, model gets closer to the global minimum then before.
     # optimizer = StochasticGradientDecrease(decay=1e-3)
 
-    # === Version 3 ===
+    # === SGD (momentum) ===
     # 0.5 -> Achieved the best so far.
     # optimizer = StochasticGradientDecrease(decay=1e-3, momentum=0.5)
-    # 0.9 -> Again, the best so far, almost 90% accuracy.
-    optimizer = StochasticGradientDecrease(decay=1e-3, momentum=0.9)
+    # 0.9 -> Retaining more momentum, again, best so far, almost 90% accuracy.
+    # epoch: 10000, acc: 0.947, loss: 0.127, learning rate: 0.091
+    # optimizer = StochasticGradientDecrease(decay=1e-3, momentum=0.9)
 
+    # === AdGrad (per-param) ===
+    # epoch: 10000, acc: 0.917, loss: 0.226, learning rate: 0.500
+    optimizer = AdGrad(decay=1e-4)
 
     # Training Loop
     for epoch in range(10001):

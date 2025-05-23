@@ -186,13 +186,40 @@ class StochasticGradientDecrease:
 
             bias_updates = self.momentum * layer.bias_momentums - self.current_learning_rate * layer.d_biases
             layer.bias_momentums = bias_updates
-        # Vanilla branch
+        # Vanilla SGD
         else:
             weight_updates = - self.current_learning_rate * layer.d_weights
             bias_updates = - self.current_learning_rate * layer.d_biases
 
         layer.weights += weight_updates
         layer.biases += bias_updates
+
+    def post_update_params(self):
+        self.iterations += 1
+
+
+class AdGrad:
+    def __init__(self, learning_rate=1., decay=0., eps=1e-7):
+        self.learning_rate = learning_rate
+        self.current_learning_rate = learning_rate
+        self.decay = decay
+        self.eps = eps
+        self.iterations = 0
+
+    def pre_update_params(self):
+        if self.decay:
+            self.current_learning_rate = self.learning_rate * (1. / (1. + self.decay * self.iterations))
+
+    def update_params(self, layer):
+        if not hasattr(layer, 'weight_caches'):
+            layer.weight_caches = np.zeros_like(layer.weights)
+            layer.bias_caches = np.zeros_like(layer.biases)
+
+        layer.weight_caches += layer.d_weights ** 2
+        layer.weights += - self.current_learning_rate * layer.d_weights / np.sqrt(layer.weight_caches) + self.eps
+
+        layer.bias_caches += layer.d_biases ** 2
+        layer.biases += - self.current_learning_rate * layer.d_biases / np.sqrt(layer.bias_caches) + self.eps
 
     def post_update_params(self):
         self.iterations += 1
