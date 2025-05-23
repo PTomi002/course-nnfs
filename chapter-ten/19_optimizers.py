@@ -1,7 +1,7 @@
 import numpy as np
 
 from nnfs.datasets import spiral_data
-from main import DenseLayer, ReLuActivation, CompositeSoftmaxAndLoss, StochasticGradientDecrease, AdGrad
+from main import DenseLayer, ReLuActivation, CompositeSoftmaxAndLoss, StochasticGradientDecrease, AdGrad, RMSProp, Adam
 
 # [Definition] What is the optimizer?
 # Answer: The optimizer adjust the weights and the biases to decrease the measure of the loss.
@@ -13,6 +13,7 @@ from main import DenseLayer, ReLuActivation, CompositeSoftmaxAndLoss, Stochastic
 # The aim is to create a neural network that can classify the data into the numeric equals of the colours, so into three classes.
 # Each dot in the graph is a feature and its coordinates are the samples.
 coordinates, classification = spiral_data(samples=100, classes=3)
+
 
 def version_one():
     # Neural MNetwork
@@ -53,6 +54,7 @@ def version_one():
         # After 10001 loop our optimization seems to stuck around loss: ~0.688 and accuracy: ~0.680.
         # This happens because the model get stuck in a local minimum so more iterations won't help.
 
+
 if __name__ == '__main__':
     # Neural MNetwork
     layer_1 = DenseLayer(2, 64)
@@ -74,9 +76,25 @@ if __name__ == '__main__':
     # epoch: 10000, acc: 0.947, loss: 0.127, learning rate: 0.091
     # optimizer = StochasticGradientDecrease(decay=1e-3, momentum=0.9)
 
-    # === AdGrad (per-param) ===
+    # === AdGrad (per-param cache) ===
     # epoch: 10000, acc: 0.917, loss: 0.226, learning rate: 0.500
-    optimizer = AdGrad(decay=1e-4)
+    # optimizer = AdGrad(decay=1e-4)
+
+    # === RMSProp (per-param cache) ===
+    # Not the best so far, trying to tuning it.
+    # epoch: 10000, acc: 0.747, loss: 0.584, learning rate: 0.0005000250
+    # optimizer = RMSProp(decay=1e-4)
+    # Not as good as SGD (momentum), but close to it.
+    # epoch: 10000, acc: 0.907, loss: 0.260, learning rate: 0.0100005000
+    # optimizer = RMSProp(learning_rate=0.02, decay=1e-4, rho=0.999)
+
+    # === Adam (correction, per-param cache, momentum) ===
+    # Best accuracy, so far, lets try to tuning it.
+    # epoch: 10000, acc: 0.943, loss: 0.145, learning rate: 0.0181819835
+    # optimizer = Adam(learning_rate=0.02, decay=1e-5)
+    # Best result of all!
+    # epoch: 10000, acc: 0.953, loss: 0.156, learning rate: 0.0497512685
+    optimizer = Adam(learning_rate=0.05, decay=5e-7) # 0.0000005
 
     # Training Loop
     for epoch in range(10001):
@@ -91,7 +109,8 @@ if __name__ == '__main__':
         if not epoch % 100:
             acc = np.mean(np.argmax(composite_activation.softmax.output, axis=1) == classification)
             avg_loss = composite_activation.loss.avg_loss
-            print(f'epoch: {epoch}, ' + f'acc: {acc:.3f}, ' + f'loss: {avg_loss:.3f}, ' + f'learning rate: {optimizer.current_learning_rate:.3f}')
+            print(
+                f'epoch: {epoch}, ' + f'acc: {acc:.3f}, ' + f'loss: {avg_loss:.3f}, ' + f'learning rate: {optimizer.current_learning_rate:.10f}')
 
         # Backward Pass
         composite_activation.backward(composite_activation.softmax.output, classification)

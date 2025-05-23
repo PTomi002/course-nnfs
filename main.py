@@ -1,4 +1,4 @@
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
 import numpy as np
 
@@ -83,7 +83,7 @@ class SoftmaxActivation:
             self.d_inputs[index] = np.dot(jacobian_matrix, d_values_row)
 
 
-class AbstractLoss:
+class AbstractLoss(ABC):
     def __init__(self):
         self.avg_loss = None
         self.output = None
@@ -158,18 +158,30 @@ class CompositeSoftmaxAndLoss:
         self.d_inputs = self.d_inputs / size_of_batch
 
 
-class StochasticGradientDecrease:
-    def __init__(self, learning_rate=1., decay=0., momentum=0.):
+class AbstractOptimizer(ABC):
+    def __init__(self, learning_rate, decay):
         self.learning_rate = learning_rate
         self.current_learning_rate = learning_rate
         self.decay = decay
-        self.momentum = momentum
         self.iterations = 0
 
     def pre_update_params(self):
         # if we have a decay rate other than 0
         if self.decay:
             self.current_learning_rate = self.learning_rate * (1. / (1. + self.decay * self.iterations))
+
+    @abstractmethod
+    def update_params(self, layer):
+        pass
+
+    def post_update_params(self):
+        self.iterations += 1
+
+
+class StochasticGradientDecrease(AbstractOptimizer):
+    def __init__(self, learning_rate=1., decay=0., momentum=0.):
+        super().__init__(learning_rate, decay)
+        self.momentum = momentum
 
     def update_params(self, layer):
         # if we have momentum rather than 0
@@ -194,21 +206,11 @@ class StochasticGradientDecrease:
         layer.weights += weight_updates
         layer.biases += bias_updates
 
-    def post_update_params(self):
-        self.iterations += 1
 
-
-class AdGrad:
+class AdGrad(AbstractOptimizer):
     def __init__(self, learning_rate=1., decay=0., eps=1e-7):
-        self.learning_rate = learning_rate
-        self.current_learning_rate = learning_rate
-        self.decay = decay
+        super().__init__(learning_rate, decay)
         self.eps = eps
-        self.iterations = 0
-
-    def pre_update_params(self):
-        if self.decay:
-            self.current_learning_rate = self.learning_rate * (1. / (1. + self.decay * self.iterations))
 
     def update_params(self, layer):
         if not hasattr(layer, 'weight_caches'):
@@ -221,5 +223,60 @@ class AdGrad:
         layer.bias_caches += layer.d_biases ** 2
         layer.biases += - self.current_learning_rate * layer.d_biases / np.sqrt(layer.bias_caches) + self.eps
 
-    def post_update_params(self):
-        self.iterations += 1
+
+class RMSProp(AbstractOptimizer):
+    def __init__(self, learning_rate=0.001, decay=0., rho=0.9, eps=1e-7):
+        super().__init__(learning_rate, decay)
+        self.rho = rho
+        self.eps = eps
+
+    def update_params(self, layer):
+        if not hasattr(layer, 'weight_caches'):
+            layer.weight_caches = np.zeros_like(layer.weights)
+            layer.bias_caches = np.zeros_like(layer.biases)
+
+        layer.weight_caches = self.rho * layer.weight_caches + (1 - self.rho) * layer.d_weights ** 2
+        layer.weights += - self.current_learning_rate * layer.d_weights / np.sqrt(layer.weight_caches) + self.eps
+
+        layer.bias_caches = self.rho * layer.bias_caches + (1 - self.rho) * layer.d_biases ** 2
+        layer.biases += - self.current_learning_rate * layer.d_biases / np.sqrt(layer.bias_caches) + self.eps
+
+
+class Adam(AbstractOptimizer):
+    def __init__(self, learning_rate=0.001, decay=0., beta_one=0.9, beta_two=0.999, eps=1e-7):
+        super().__init__(learning_rate, decay)
+        self.beta_one = beta_one
+        self.beta_two = beta_two
+        self.eps = eps
+
+    def update_params(self, layer):
+        if not hasattr(layer, 'weight_momentums'):
+            layer.weight_momentums = np.zeros_like(layer.weights)
+            layer.weight_caches = np.zeros_like(layer.weights)
+
+            layer.bias_momentums = np.zeros_like(layer.biases)
+            layer.bias_caches = np.zeros_like(layer.biases)
+
+        # Momentum Calculations
+        # formula =     retains a part of the momentum +  updates it with the fraction of the gradient
+        layer.weight_momentums = self.beta_one * layer.weight_momentums + (1 - self.beta_one) * layer.d_weights
+        layer.bias_momentums = self.beta_one * layer.bias_momentums + (1 - self.beta_one) * layer.d_biases
+
+        # formula =     compensating the initial 0 values coming from the init of properties --> speeding up the initial steps
+        weight_momentums_corrected = layer.weight_momentums / (1 - self.beta_one ** (self.iterations + 1))
+        bias_momentums_corrected = layer.bias_momentums / (1 - self.beta_one ** (self.iterations + 1))
+
+        # Cache Calculations
+        # formula =     retains a part of the cache +  updates it with the fraction of the squared gradient
+        layer.weight_caches = self.beta_two * layer.weight_caches + (1 - self.beta_two) * layer.d_weights ** 2
+        layer.bias_caches = self.beta_two * layer.bias_caches + (1 - self.beta_two) * layer.d_biases ** 2
+
+        # formula =     compensating the initial 0 values coming from the init of properties --> speeding up the initial steps
+        weight_caches_corrected = layer.weight_caches / (1 - self.beta_two ** (self.iterations + 1))
+        bias_caches_corrected = layer.bias_caches / (1 - self.beta_two ** (self.iterations + 1))
+
+        # Vanilla SGD update
+        layer.weights += - self.current_learning_rate * weight_momentums_corrected / np.sqrt(
+            weight_caches_corrected) + self.eps
+        layer.biases += - self.current_learning_rate * bias_momentums_corrected / np.sqrt(
+            bias_caches_corrected) + self.eps
