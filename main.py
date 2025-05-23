@@ -177,7 +177,7 @@ class AbstractOptimizer(ABC):
     def post_update_params(self):
         self.iterations += 1
 
-
+# Good hyperparameters to start with: learning_rate=1., decay=0.1
 class StochasticGradientDecrease(AbstractOptimizer):
     def __init__(self, learning_rate=1., decay=0., momentum=0.):
         super().__init__(learning_rate, decay)
@@ -241,7 +241,7 @@ class RMSProp(AbstractOptimizer):
         layer.bias_caches = self.rho * layer.bias_caches + (1 - self.rho) * layer.d_biases ** 2
         layer.biases += - self.current_learning_rate * layer.d_biases / np.sqrt(layer.bias_caches) + self.eps
 
-
+# Good hyperparameters to start with: learning_rate=1e-3, decay=1e-4
 class Adam(AbstractOptimizer):
     def __init__(self, learning_rate=0.001, decay=0., beta_one=0.9, beta_two=0.999, eps=1e-7):
         super().__init__(learning_rate, decay)
