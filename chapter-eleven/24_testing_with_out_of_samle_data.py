@@ -45,8 +45,8 @@ if __name__ == '__main__':
 
         learning_rate_over_training_steps.append(optimizer.current_learning_rate)
 
-        # if not epoch % 100:
-            # print(f'epoch: {epoch}, ' + f'acc: {acc:.3f}, ' + f'loss: {avg_loss:.3f}, ' + f'learning rate: {optimizer.current_learning_rate:.10f}')
+        if epoch == training_steps.size - 1:
+            print(f'epoch: {epoch}, ' + f'acc: {acc:.3f}, ' + f'loss: {avg_loss:.3f}, ' + f'learning rate: {optimizer.current_learning_rate:.10f}')
 
         # Backward Pass
         composite_activation.backward(composite_activation.softmax.output, training_classification)
@@ -90,3 +90,7 @@ if __name__ == '__main__':
 
     plt.show()
     # Classic example of overfitting when the loss starts to fall, then starts rising again.
+
+    # [Definition] How to find the hyperparameters?
+    # Answer:   ???
+
